@@ -112,6 +112,7 @@ namespace DevChatter.Bot.Core.Games.Quiz
                 return "You can't leave a game that isn't being played."; // TODO: this needs to be a whisper
             }
 
+            // TODO: Make this boolean check be an abstract in the JoinableGame class
             if (_questionAskingStarted)
             {
                 return "The questions have started, you can't leave."; // TODO: this needs to be a whisper
