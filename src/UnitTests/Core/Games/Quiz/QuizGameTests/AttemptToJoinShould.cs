@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
 using DevChatter.Bot.Core.Automation;
 using DevChatter.Bot.Core.Data;
 using DevChatter.Bot.Core.Data.Model;
 using DevChatter.Bot.Core.Data.Specifications;
 using DevChatter.Bot.Core.Events;
+using DevChatter.Bot.Core.Games;
 using DevChatter.Bot.Core.Games.Quiz;
 using DevChatter.Bot.Core.Systems.Chat;
 using FluentAssertions;
 using Moq;
+using System;
+using System.Collections.Generic;
 using UnitTests.Fakes;
 using Xunit;
 
@@ -26,7 +27,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
             quizGame.AttemptToJoin(chatUser);
             var result = quizGame.AttemptToJoin(chatUser);
 
-            result.Should().Be(QuizJoinResults.AlreadyInGameResult(chatUser.DisplayName));
+            result.Should().Be(StaticResults.AlreadyInGameResult(chatUser.DisplayName));
         }
 
         [Fact]
@@ -37,7 +38,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
             string displayName = Guid.NewGuid().ToString();
             var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
 
-            result.Should().Be(QuizJoinResults.NotJoinTimeResult(displayName));
+            result.Should().Be(StaticResults.NotJoinTimeResult(displayName));
         }
 
         [Fact]
@@ -54,7 +55,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
 
             var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
 
-            result.Should().Be(QuizJoinResults.NotJoinTimeResult(displayName));
+            result.Should().Be(StaticResults.NotJoinTimeResult(displayName));
         }
 
         [Fact]
@@ -66,7 +67,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
             quizGame.StartGame(new Mock<IChatClient>().Object);
             var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
 
-            result.Should().Be(QuizJoinResults.SuccessJoinResult(displayName));
+            result.Should().Be(StaticResults.SuccessJoinResult(displayName));
         }
     }
 }
