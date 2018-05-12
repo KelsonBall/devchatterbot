@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using DevChatter.Bot.Core.Automation;
 using DevChatter.Bot.Core.Data.Model;
 using DevChatter.Bot.Core.Extensions;
 using DevChatter.Bot.Core.Systems.Chat;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DevChatter.Bot.Core.Games
 {
@@ -44,7 +44,5 @@ namespace DevChatter.Bot.Core.Games
             CurrentPlayerNames.Add(chatUser.DisplayName);
             return StaticResults.SuccessJoinResult(chatUser.DisplayName);
         }
-
-
     }
 }
