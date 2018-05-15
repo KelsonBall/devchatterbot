@@ -29,7 +29,7 @@ namespace DevChatter.Bot.Core.Games
             AutomatedActionSystem.AddAction(startAskingQuestions);
         }
 
-        public JoinGameResult AttemptToJoin(ChatUser chatUser)
+        public virtual JoinGameResult AttemptToJoin(ChatUser chatUser, IList<string> arguments)
         {
             if (CurrentPlayerNames.Any(x => x.EqualsIns(chatUser.DisplayName)))
             {

@@ -24,8 +24,8 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
 
             var chatUser = new ChatUser {DisplayName = "Brendan"};
             quizGame.StartGame(new Mock<IChatClient>().Object);
-            quizGame.AttemptToJoin(chatUser);
-            var result = quizGame.AttemptToJoin(chatUser);
+            quizGame.AttemptToJoin(chatUser, new[] {""});
+            var result = quizGame.AttemptToJoin(chatUser, new[] { "" });
 
             result.Should().Be(StaticResults.AlreadyInGameResult(chatUser.DisplayName));
         }
@@ -36,7 +36,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
             var quizGame = new QuizGame(new Mock<IRepository>().Object, new Mock<ICurrencyGenerator>().Object, new Mock<IAutomatedActionSystem>().Object);
 
             string displayName = Guid.NewGuid().ToString();
-            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
+            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName}, new[] { "" });
 
             result.Should().Be(StaticResults.NotJoinTimeResult(displayName));
         }
@@ -53,7 +53,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
                 .Returns(new List<QuizQuestion> { new QuizQuestion() });
             automatedActionSystem.IntervalAction.Invoke(); // run the action, starting the questions
 
-            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
+            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName}, new[] { "" });
 
             result.Should().Be(StaticResults.NotJoinTimeResult(displayName));
         }
@@ -65,7 +65,7 @@ namespace UnitTests.Core.Games.Quiz.QuizGameTests
 
             string displayName = Guid.NewGuid().ToString();
             quizGame.StartGame(new Mock<IChatClient>().Object);
-            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName});
+            var result = quizGame.AttemptToJoin(new ChatUser {DisplayName = displayName}, new[] { "" });
 
             result.Should().Be(StaticResults.SuccessJoinResult(displayName));
         }

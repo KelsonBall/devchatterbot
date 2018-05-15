@@ -9,9 +9,8 @@ using DevChatter.Bot.Core.Util;
 
 namespace DevChatter.Bot.Core.Games.Heist
 {
-    public class HeistGame
+    public class HeistGame : JoinableGame
     {
-        private readonly IAutomatedActionSystem _automatedActionSystem;
         private readonly ICurrencyGenerator _currencyGenerator;
         public bool IsGameRunning { get; private set; }
         private const UserRole ROLE_REQUIRED_TO_START = UserRole.Subscriber;
@@ -24,9 +23,9 @@ namespace DevChatter.Bot.Core.Games.Heist
         private OneTimeCallBackAction _startHeistAction;
 
         public HeistGame(IAutomatedActionSystem automatedActionSystem, ICurrencyGenerator currencyGenerator)
+            : base(automatedActionSystem)
         {
             _currencyGenerator = currencyGenerator;
-            _automatedActionSystem = automatedActionSystem;
         }
 
         public void AttemptToCreateGame(IChatClient chatClient, ChatUser chatUser)
@@ -57,10 +56,10 @@ namespace DevChatter.Bot.Core.Games.Heist
         {
             _lastCallToJoin = new DelayedMessageAction(HEIST_DELAY_IN_SECONDS - 30,
                 "Only 30 seconds left to join the heist! Type !heist to join it!", chatClient);
-            _automatedActionSystem.AddAction(_lastCallToJoin);
+            AutomatedActionSystem.AddAction(_lastCallToJoin);
 
             _startHeistAction = new OneTimeCallBackAction(HEIST_DELAY_IN_SECONDS, () => StartHeist(chatClient));
-            _automatedActionSystem.AddAction(_startHeistAction);
+            AutomatedActionSystem.AddAction(_startHeistAction);
         }
 
         public void StartHeist(IChatClient chatClient)
@@ -82,36 +81,42 @@ namespace DevChatter.Bot.Core.Games.Heist
             _heistMembers.Clear();
             IsGameRunning = false;
             _selectedHeist = null;
-            _automatedActionSystem.RemoveAction(_lastCallToJoin);
-            _automatedActionSystem.RemoveAction(_startHeistAction);
+            AutomatedActionSystem.RemoveAction(_lastCallToJoin);
+            AutomatedActionSystem.RemoveAction(_startHeistAction);
         }
 
-        public JoinGameResult AttemptToJoinHeist(string displayName, HeistRoles role)
+        public override JoinGameResult AttemptToJoin(ChatUser chatUser, IList<string> arguments)
         {
-            if (_heistMembers.ContainsValue(displayName))
+            JoinGameResult joinGameResult = base.AttemptToJoin(chatUser, arguments);
+
+            if (joinGameResult.Success)
             {
-                return HeistJoinResults.AlreadyInHeistResult(displayName);
+                return HandleHeistJoining(chatUser, arguments);
+            }
+
+            return joinGameResult;
+        }
+
+        private JoinGameResult HandleHeistJoining(ChatUser chatUser, IList<string> arguments)
+        {
+            if (!Enum.TryParse(arguments?.ElementAtOrDefault(0) ?? "", true, out HeistRoles role))
+            {
+                bool success;
+                (success, role) = MyRandom.ChooseRandomItem(GetAvailableRoles());
+                if (!success)
+                {
+                    return HeistJoinResults.HeistFullResult(chatUser.DisplayName);
+                }
             }
 
             if (_heistMembers.ContainsKey(role))
             {
-                return HeistJoinResults.RoleTakenResult(displayName, role);
+                return HeistJoinResults.RoleTakenResult(chatUser.DisplayName, role);
             }
 
-            _heistMembers.Add(role, displayName);
+            _heistMembers.Add(role, chatUser.DisplayName);
 
-            return HeistJoinResults.SuccessJoinResult(displayName, role);
-        }
-        public JoinGameResult AttemptToJoinHeist(string displayName, out HeistRoles role)
-        {
-            bool success;
-            (success, role) = MyRandom.ChooseRandomItem(GetAvailableRoles());
-            if (!success)
-            {
-                return HeistJoinResults.HeistFullResult(displayName);
-            }
-
-            return AttemptToJoinHeist(displayName, role);
+            return HeistJoinResults.SuccessJoinResult(chatUser.DisplayName, role);
         }
 
         private List<HeistRoles> GetAvailableRoles()
@@ -125,27 +130,14 @@ namespace DevChatter.Bot.Core.Games.Heist
         {
             if (!GetAvailableRoles().Any() && IsGameRunning)
             {
-                _automatedActionSystem.RemoveAction(_startHeistAction);
+                AutomatedActionSystem.RemoveAction(_startHeistAction);
                 StartHeist(chatClient);
                 return true;
             }
 
             return false;
         }
-    }
 
-    public static class HeistJoinResults
-    {
-        public static JoinGameResult SuccessJoinResult(string displayName, HeistRoles role)
-            => new JoinGameResult(true, $"{displayName} joined the heist as the {role}!");
-        public static JoinGameResult RoleTakenResult(string displayName, HeistRoles role)
-            => new JoinGameResult(false, $"Sorry, {displayName} we already have a {role}!");
-        public static JoinGameResult HeistFullResult(string displayName)
-            => new JoinGameResult(false, $"Sorry, {displayName} this heist is full!");
-        public static JoinGameResult UnknownRoleResult(string displayName)
-            => new JoinGameResult(false, $"I don't know what role you wanted to be, {displayName}. Try again?");
-        public static JoinGameResult AlreadyInHeistResult(string displayName)
-            => new JoinGameResult(false, $"You're already in this heist, {displayName} and you aren't a multi-tasker.");
-
+        public override bool IsGameJoinable => IsRunning && GetAvailableRoles().Any();
     }
 }

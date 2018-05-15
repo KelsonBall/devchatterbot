@@ -21,7 +21,7 @@ namespace DevChatter.Bot.Core.Games.Quiz
 
         public override string TryToExecute(CommandReceivedEventArgs eventArgs)
         {
-            JoinGameResult joinGameResult = _game.AttemptToJoin(eventArgs.ChatUser);
+            JoinGameResult joinGameResult = _game.AttemptToJoin(eventArgs.ChatUser, eventArgs.Arguments);
             return joinGameResult.Message;
         }
     }
